@@ -1,1 +1,1 @@
-# CRUD PROJECT USING DJANGO REST FRAMEWORK
+# CRUD Project using Django Rest Framework

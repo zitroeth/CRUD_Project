@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'rental',
     'rest_framework',
     'corsheaders',
+    # 'rest_framework.authtoken',
+    # 'rest_framework_jwt',
 ]
 
 MIDDLEWARE = [
@@ -84,7 +86,7 @@ WSGI_APPLICATION = 'CRUD_Project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'django_schema',
+        'NAME': 'mysql_django_schema',
         'USER': 'django_user',
         'PASSWORD': 'P@ssword123',
         'HOST': 'localhost',
@@ -138,4 +140,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'SIMPLE_JWT': {
+        'AUTH_TOKEN_CLASSES': ('rental.serializers.CustomTokenGenerator',)
+    }
 }

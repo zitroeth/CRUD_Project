@@ -15,7 +15,6 @@ from rest_framework.authentication import TokenAuthentication
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Group
 
-
 User = get_user_model()
 sentiment_model = pipeline(model="zitroeth/finetuning-distilbert-model-steam-game-reviews")
 
@@ -86,6 +85,22 @@ class SentimentAnalysisViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(sentiments, many=True)
         return Response(serializer.data)
     
+    def update(self, request, pk=None):
+        try:
+            sentiment_analysis_instance = models.SentimentAnalysis.objects.get(pk=pk)
+            
+            if sentiment_analysis_instance.user == request.user or request.user.is_superuser:
+                serializer = serializers.SentimentAnalysisSerializer(sentiment_analysis_instance, data=request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"error": "Unauthorized to update this sentiment analysis."}, status=status.HTTP_403_FORBIDDEN)
+        except models.SentimentAnalysis.DoesNotExist:
+            return Response({"error": "Sentiment analysis does not exist"}, status=status.HTTP_404_NOT_FOUND)
+    
     def destroy(self, request, pk=None):
         try:
             current_user_id = request.user.id
@@ -98,12 +113,27 @@ class SentimentAnalysisViewSet(viewsets.ModelViewSet):
         except models.SentimentAnalysis.DoesNotExist:
             return Response({"error": "Item does not exist"}, status=404)
     
-class UserList(generics.ListAPIView):
+class UserList(generics.ListAPIView, generics.UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    
+
+    def update(self, request, pk=None):
+        try:
+            user_to_update = User.objects.get(pk=pk)
+            if user_to_update.id == request.user.id or request.user.is_superuser:
+                serializer = UserSerializer(user_to_update, data=request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"error": "Unauthorized to update this account."}, status=status.HTTP_403_FORBIDDEN)
+        except User.DoesNotExist:
+            return Response({"error": "Account does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
     def delete(self, request, pk=None):
         try:
             current_user_id = request.user.id
